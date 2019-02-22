@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ka-hs
+  namespace: demo
+  labels:
+    app: kafka
+spec:
+  clusterIP: None
+# [pod-name].ka-hs.demo.svc.cluster.local
+  ports:
+    - name: server
+      port: 9092
+  selector:
+    app: kafka-app
+  type: ClusterIP

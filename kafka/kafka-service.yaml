@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ka-cs
+  namespace: demo
+  labels:
+    app: kafka
+spec:
+  ports:
+    - name: server
+      port: 9092
+  selector:
+    app: kafka-app
+  type: ClusterIP

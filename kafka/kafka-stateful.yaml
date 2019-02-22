@@ -1,0 +1,69 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: demo
+spec:
+  serviceName: "ka-hs"
+  replicas: 1
+  podManagementPolicy: Parallel
+  updateStrategy:
+     type: RollingUpdate
+  template:
+    metadata:
+       labels:
+          app: kafka
+    spec: 
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: name
+                operator: In
+                values:
+                - node01
+                - node02
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: kafka
+        imagePullPolicy: Always
+        image: gcr.io/google_containers/kubernetes-kafka:1.0-10.2.1
+        resources:
+          requests:
+            memory: "0.5Gi"
+            cpu: "0.5"
+        ports:
+        - containerPort: 9092
+          name: server
+        command:
+        - sh 
+        - -c 
+        - "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=${HOSTNAME##*-} \
+          --override listeners=PLAINTEXT://:9092 \
+          --override zookeeper.connect=zookeeper-0.zk-hs.demo.svc.cluster.local:2181 \
+          --override log.dir=/var/lib/kafka"
+        #env:
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/lib/kafka
+        readinessProbe:
+          exec:
+           command: 
+            - sh 
+            - -c 
+            - "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server=localhost:9092"
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+    
+
+  
