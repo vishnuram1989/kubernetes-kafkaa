@@ -39,11 +39,18 @@ spec:
         command:
         - sh 
         - -c 
-        - "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=${HOSTNAME##*-} \
-          --override listeners=PLAINTEXT://:9092 \
+        - "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=${HOSTNAME##*-}  \
           --override zookeeper.connect=zookeeper-0.zk-hs.demo.svc.cluster.local:2181 \
           --override log.dir=/var/lib/kafka"
-        #env:
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://$(HOSTNAME).kafka:9092"
+        - name: KAFKA_ADVERTISED_HOSTNAME
+          value: $(HOSTNAME).kafka
         volumeMounts:
         - name: datadir
           mountPath: /var/lib/kafka
