@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: demo
+spec:
+  selector:
+    matchLabels:
+      app: kafka
+  serviceName: ka-hs
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+           nodeSelectorTerms:
+           - matchExpressions:
+             - key: unhealthy
+               operator: DoesNotExist
+      containers:
+      - name: kubernetes-kafka
+        imagePullPolicy: Always
+        image: wurstmeister/kafka:2.11-2.0.1
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "export KAFKA_BROKER_ID=${HOSTNAME##*-}"]
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zk-cs:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS   
+          value: "PLAINTEXT://$(HOSTNAME).ka-hs:9092"
+        - name: KAFKA_ADVERTISED_HOST_NAME
+          value: "$(HOSTNAME).ka-cs"
+        ports:
+        - containerPort: 9092
+          name: broker-port
+        volumeMounts:
+        - name: datadir
+          mountPath: /kafka
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

@@ -28,7 +28,20 @@ spec:
       containers:
       - name: kafka
         imagePullPolicy: Always
-        image: gcr.io/google_containers/kubernetes-kafka:1.0-10.2.1
+        image: wurstmeister/kafka:2.11-2.0.1 #gcr.io/google_containers/kubernetes-kafka:1.0-10.2.1
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_BROKER_ID
+          value: "${HOSTNAME##*-}"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zk-cs:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://$(HOSTNAME).kafka:9092"
+        - name: KAFKA_ADVERTISED_HOSTNAME
+          value: "$(HOSTNAME).kafka"
         resources:
           requests:
             memory: "0.5Gi"
@@ -36,30 +49,23 @@ spec:
         ports:
         - containerPort: 9092
           name: server
-        command:
-        - sh 
-        - -c 
-        - "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=${HOSTNAME##*-}  \
-          --override zookeeper.connect=zookeeper-0.zk-hs.demo.svc.cluster.local:2181 \
-          --override log.dir=/var/lib/kafka"
-        env:
-        - name: HOSTNAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://$(HOSTNAME).kafka:9092"
-        - name: KAFKA_ADVERTISED_HOSTNAME
-          value: $(HOSTNAME).kafka
+        
+        #command:
+        #- sh 
+        #- -c 
+        #- "exec kafka-server-start.sh /opt/kafka/config/server.properties --override broker.id=${HOSTNAME##*-}  \
+        #  --override zookeeper.connect=zookeeper-0.zk-hs.demo.svc.cluster.local:2181 \
+        #  --override log.dir=/var/lib/kafka"
+        
         volumeMounts:
         - name: datadir
-          mountPath: /var/lib/kafka
-        readinessProbe:
-          exec:
-           command: 
-            - sh 
-            - -c 
-            - "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server=localhost:9092"
+          mountPath: /kafka #/var/lib/kafka
+        #readinessProbe:
+        #  exec:
+        #   command: 
+        #    - sh 
+        #    - -c 
+        #    - "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server=localhost:9092"
       securityContext:
         runAsUser: 1000
         fsGroup: 1000
