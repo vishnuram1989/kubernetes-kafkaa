@@ -2,12 +2,11 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
-  namespace: demo
 spec:
   selector:
     matchLabels:
       app: kafka
-  serviceName: ka-hs
+  serviceName: kafka-hs
   replicas: 1
   updateStrategy:
     type: RollingUpdate
@@ -17,13 +16,6 @@ spec:
       labels:
         app: kafka
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-           nodeSelectorTerms:
-           - matchExpressions:
-             - key: unhealthy
-               operator: DoesNotExist
       containers:
       - name: kubernetes-kafka
         imagePullPolicy: Always
@@ -56,4 +48,4 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 1Gi
+          storage: 10Gi

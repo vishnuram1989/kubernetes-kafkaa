@@ -2,7 +2,6 @@ apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: zookeeper
-  namespace: demo
 spec:
   serviceName: "zk-hs"
   replicas: 1
@@ -14,17 +13,7 @@ spec:
        labels:
           app: zookeeper-app
     spec: 
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: name
-                operator: In
-                values:
-                - node01
-                - node02
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 300
       containers:
       - name: zookeeper
         imagePullPolicy: Always
@@ -32,7 +21,7 @@ spec:
         ports:
         - containerPort: 2181
           name: client
-        - containerPort: 2888
+        - containerPort: 3888
           name: server
         - containerPort: 2888
           name: election

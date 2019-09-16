@@ -2,7 +2,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: zk-cs
-  namespace: demo
   labels:
     app: zookeeper
 spec:
