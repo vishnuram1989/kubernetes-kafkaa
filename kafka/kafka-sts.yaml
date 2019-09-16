@@ -19,7 +19,7 @@ spec:
       containers:
       - name: kubernetes-kafka
         imagePullPolicy: Always
-        image: wurstmeister/kafka:2.11-2.0.1
+        image: vishnu89/vishnuram:custome-kafka
         lifecycle:
           postStart:
             exec:
